@@ -21,22 +21,21 @@ def boundary_points(points):
           [x+w-spacerw, y+spacerh]]
 
 def face_points(imgpath, add_boundary_points=True):
-  """ Locates 77 face points using stasm (http://www.milbo.users.sonic.net/stasm)
+  """ Locates 68 face points using dlib (http://blog.dlib.net/2014/08/real-time-face-pose-estimation.html)
 
-  :param imgpath: an image path to extract the 77 face points
+  :param imgpath: an image path to extract the 68 face points
   :param add_boundary_points: bool to add 2 additional points
   :returns: Array of x,y face points. Empty array if no face found
   """
   directory = path.dirname(path.realpath(__file__))
-  stasm_path = path.join(directory, 'bin/stasm_util')
-  data_folder = path.join(directory, 'data')
-  command = '"{0}" -f "{1}" "{2}"'.format(stasm_path, data_folder, imgpath)
+  flde_path = path.join(directory, 'bin/face_landmark_detection_ex.exe')
+  landmarks_path = path.join(directory, 'data/shape_predictor_68_face_landmarks.dat')
+  command = '"{0}" "{1}" "{2}"'.format(flde_path, landmarks_path, imgpath)
   s = subprocess.check_output(command, shell=True)
   if s.startswith('No face found'):
     return []
   else:
-    points = np.array([pair.split(' ') for pair in s.rstrip().split('\n')],
-                      np.int32)
+    points = np.array([pair.split('-') for pair in s.rstrip().split(',')], np.int32)
     if (add_boundary_points):
       points = np.vstack([points, boundary_points(points)])
 

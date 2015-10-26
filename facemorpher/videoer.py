@@ -22,7 +22,8 @@ class Video(object):
     if filename is None:
       self.video = None
     else:
-      fourcc = cv2.cv.FOURCC('m', 'p', '4', 'v')
+      # fourcc = cv2.cv.FOURCC('m', 'p', '4', 'v')
+      fourcc = -1#cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
       self.video = cv2.VideoWriter(filename, fourcc, fps, (w, h), True)
 
   @check_write_video

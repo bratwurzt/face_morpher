@@ -118,7 +118,41 @@ def morph(src_img, src_points, dest_img, dest_points,
 
   plt.show()
 
-def morpher(imgpaths, width=500, height=600, num_frames=20, fps=10,
+def transform(src_img, src_points, dest_points,
+          video, width=500, height=600,  num_frames=20, fps=10,
+          out_frames=None, out_video=None, alpha=False, plot=False):
+  """
+  Create a transformation sequence on the same image from source to destination points
+
+  :param src_img: ndarray source image
+  :param src_points: source image array of x,y face points
+  :param dest_points: destination image array of x,y face points
+  :param video: facemorpher.videoer.Video object
+  """
+  size = (height, width)
+  stall_frames = np.clip(int(fps*0.15), 1, fps)  # Show first & last longer
+  plt = plotter.Plotter(plot, num_images=num_frames, folder=out_frames)
+  num_frames -= (stall_frames * 2)  # No need to process src and dest image
+
+  plt.plot_one(src_img)
+  video.write(src_img, stall_frames)
+
+  # Produce morph frames!
+  for percent in np.linspace(1, 0, num=num_frames):
+    points = locator.weighted_average_points(src_points, dest_points, percent)
+    src_face = warper.warp_image(src_img, src_points, points, size)
+    # end_face = warper.warp_image(dest_img, dest_points, points, size)
+    # average_face = blender.weighted_average(src_face, end_face, percent)
+    # average_face = alpha_image(average_face, points) if alpha else average_face
+    video.write(src_face)
+    plt.plot_one(src_face)
+
+  plt.plot_one(src_face)
+  video.write(src_face, stall_frames)
+
+  plt.show()
+
+def morpher(imgpaths, width=500, height=600, num_frames=30, fps=15,
             out_frames=None, out_video=None, alpha=False, plot=False):
   """
   Create a morph sequence from multiple images in imgpaths
@@ -129,7 +163,9 @@ def morpher(imgpaths, width=500, height=600, num_frames=20, fps=10,
   images_points_gen = load_valid_image_points(imgpaths, (height, width))
   src_img, src_points = images_points_gen.next()
   for dest_img, dest_points in images_points_gen:
-    morph(src_img, src_points, dest_img, dest_points, video,
+    # morph(src_img, src_points, dest_img, dest_points, video,
+    #       width, height, num_frames, fps, out_frames, out_video, alpha, plot)
+    transform(src_img, src_points, dest_points, video,
           width, height, num_frames, fps, out_frames, out_video, alpha, plot)
     src_img, src_points = dest_img, dest_points
   video.end()
